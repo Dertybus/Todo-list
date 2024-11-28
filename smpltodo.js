@@ -1,6 +1,6 @@
 const todo = {
-    todos: [], 
-
+    todos: [], // array для todo_items
+    // делает свою магию при нажатии на todo_item
     action(e) {
         const target = e.target;
         if (target.classList.contains('todo__action')) {
@@ -35,7 +35,7 @@ const todo = {
             this.save();
         }
     },
-
+    // добовляет новый todo_item с уникальным id и текстом в список
     add() {
         const elemText = document.querySelector('.todo__text');
         if (elemText.disabled || !elemText?.value?.length) {
@@ -54,7 +54,7 @@ const todo = {
         document.querySelector('.todo__items').insertAdjacentHTML('beforeend', this.create(newTodo));
         elemText.value = '';
     },
-
+    // делает html элементы todo_item
     create(todoItem) {
         return `<li class="todo__item" data-todo-state="${todoItem.state}" data-todo-id="${todoItem.id}">
             <span class="todo__task">
@@ -66,15 +66,15 @@ const todo = {
             <span class="todo__action todo__action_delete" data-todo-action="deleted"></span>
         </li>`;
     },
-
+    // создает дату для todp_item 
     getTodoDate(todoItem) {
         return `<time class="todo__date" datetime="${todoItem.created}">добавлено: ${todoItem.created}</time>`;
     },
-    
+    // обновляет данные todo_item в ui
     renderTodoItem(elemItem, todoItem) {
         elemItem.dataset.todoState = todoItem.state;
     },
-
+    // инициализирует todo_item
     init() {
         const fromStorage = localStorage.getItem('todo');
         if (fromStorage) {
@@ -90,14 +90,19 @@ const todo = {
         document.querySelector('.todo__options').addEventListener('change', this.update.bind(this));
         document.addEventListener('click', this.action.bind(this));
     },
+    // обновляет данные видимости todo_item в ui в зависимости от фильтра (активные, завершенные, удаленные)
     update() {
         const option = document.querySelector('.todo__options').value;
         document.querySelector('.todo__items').dataset.todoOption = option;
         document.querySelector('.todo__text').disabled = option !== 'active';
     },
+    // сохраняет данные todo_item в JSON
     save() {
         localStorage.setItem('todo', JSON.stringify(this.todos));
     },
 };
+
+todo.init();
+
 
 todo.init();
