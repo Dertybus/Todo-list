@@ -1,12 +1,12 @@
 const todo = {
-    todos: [], // Add array to store todo items
+    todos: [], 
 
     action(e) {
         const target = e.target;
         if (target.classList.contains('todo__action')) {
             const action = target.dataset.todoAction;
             const elemItem = target.closest('.todo__item');
-            const todoId = elemItem.dataset.todoId; // Add ID to track items
+            const todoId = elemItem.dataset.todoId; 
 
             if (action === 'deleted' && elemItem.dataset.todoState === 'deleted') {
                 this.todos = this.todos.filter(todo => todo.id !== todoId);
@@ -43,7 +43,7 @@ const todo = {
         }
 
         const newTodo = {
-            id: Date.now().toString(), // Unique ID for each todo
+            id: Date.now().toString(), 
             text: elemText.value,
             state: 'active',
             created: new Date().toLocaleString(),
@@ -70,10 +70,8 @@ const todo = {
     getTodoDate(todoItem) {
         return `<time class="todo__date" datetime="${todoItem.created}">добавлено: ${todoItem.created}</time>`;
     },
-
-    // Initializes the todo list, loads data from localStorage, and sets up event listeners
+    
     renderTodoItem(elemItem, todoItem) {
-        // Update the DOM element to reflect the new state
         elemItem.dataset.todoState = todoItem.state;
     },
 
