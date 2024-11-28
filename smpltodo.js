@@ -1,21 +1,33 @@
 const todo = {
+    todos: [], // Add array to store todo items
+
     action(e) {
         const target = e.target;
         if (target.classList.contains('todo__action')) {
             const action = target.dataset.todoAction;
             const elemItem = target.closest('.todo__item');
+            const todoId = elemItem.dataset.todoId; // Add ID to track items
+
             if (action === 'deleted' && elemItem.dataset.todoState === 'deleted') {
+                this.todos = this.todos.filter(todo => todo.id !== todoId);
                 elemItem.remove();
             } else {
-                elemItem.dataset.todoState = action;
+                const todoItem = this.todos.find(todo => todo.id === todoId);
+                todoItem.state = action;
+                todoItem.history = todoItem.history || [];
+
                 const lexicon = {
                     active: 'восстановлено',
                     completed: 'завершено',
                     deleted: 'удалено'
                 };
-                const elTodoDate = elemItem.querySelector('.todo__date');
-                const html = `<span>${lexicon[action]}: ${new Date().toLocaleString().slice(0, -3)}</span>`;
-                elTodoDate.insertAdjacentHTML('beforeend', html);
+
+                todoItem.history.push({
+                    action: lexicon[action],
+                    datetime: new Date().toLocaleString()
+                });
+
+                this.renderTodoItem(elemItem, todoItem);
             }
             this.save();
         } else if (target.classList.contains('todo__add')) {
@@ -23,33 +35,61 @@ const todo = {
             this.save();
         }
     },
+
     add() {
         const elemText = document.querySelector('.todo__text');
-        if (elemText.disabled || !elemText.value.length) {
+        if (elemText.disabled || !elemText?.value?.length) {
             return;
         }
-        document.querySelector('.todo__items').insertAdjacentHTML('beforeend', this.create(elemText.value));
+
+        const newTodo = {
+            id: Date.now().toString(), // Unique ID for each todo
+            text: elemText.value,
+            state: 'active',
+            created: new Date().toLocaleString(),
+            history: []
+        };
+
+        this.todos.push(newTodo);
+        document.querySelector('.todo__items').insertAdjacentHTML('beforeend', this.create(newTodo));
         elemText.value = '';
     },
-    create(text) {
-        const date = JSON.stringify({ add: new Date().toLocaleString().slice(0, -3) });
-        return `<li class="todo__item" data-todo-state="active">
-      <span class="todo__task">
-        ${text}
-        <span class="todo__date" data-todo-date="${date}">
-          <span>добавлено: ${new Date().toLocaleString().slice(0, -3)}</span>
-        </span>
-      </span>
-      <span class="todo__action todo__action_restore" data-todo-action="active"></span>
-      <span class="todo__action todo__action_complete" data-todo-action="completed"></span>
-      <span class="todo__action todo__action_delete" data-todo-action="deleted"></span></li>`;
+
+    create(todoItem) {
+        return `<li class="todo__item" data-todo-state="${todoItem.state}" data-todo-id="${todoItem.id}">
+            <span class="todo__task">
+                ${todoItem.text}
+                ${this.getTodoDate(todoItem)}
+            </span>
+            <span class="todo__action todo__action_restore" data-todo-action="active"></span>
+            <span class="todo__action todo__action_complete" data-todo-action="completed"></span>
+            <span class="todo__action todo__action_delete" data-todo-action="deleted"></span>
+        </li>`;
     },
+
+    getTodoDate(todoItem) {
+        return `<time class="todo__date" datetime="${todoItem.created}">добавлено: ${todoItem.created}</time>`;
+    },
+
+    // Initializes the todo list, loads data from localStorage, and sets up event listeners
+    renderTodoItem(elemItem, todoItem) {
+        // Update the DOM element to reflect the new state
+        elemItem.dataset.todoState = todoItem.state;
+    },
+
     init() {
         const fromStorage = localStorage.getItem('todo');
         if (fromStorage) {
-            document.querySelector('.todo__items').innerHTML = fromStorage;
+            try {
+                this.todos = JSON.parse(fromStorage);
+                const todoItems = this.todos.map(item => this.create(item)).join('');
+                document.querySelector('.todo__items').innerHTML = todoItems;
+            } catch (e) {
+                console.error('Error parsing todos:', e);
+                this.todos = [];
+            }
         }
-        document.querySelector('.todo__options').addEventListener('change', this.update);
+        document.querySelector('.todo__options').addEventListener('change', this.update.bind(this));
         document.addEventListener('click', this.action.bind(this));
     },
     update() {
@@ -58,8 +98,8 @@ const todo = {
         document.querySelector('.todo__text').disabled = option !== 'active';
     },
     save() {
-        localStorage.setItem('todo', document.querySelector('.todo__items').innerHTML);
-    }
+        localStorage.setItem('todo', JSON.stringify(this.todos));
+    },
 };
 
 todo.init();
